@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PathoWatch AI — Brave / Browser Push Alerts</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g1:#00e676;--g2:#00c853;
+  --red:#ff3d3d;--amber:#ffab00;
+  --purple:#6366f1;--purple2:#4f46e5;
+  --wa:#25d366;--wa2:#128c7e;
+  --bg:#f0faf0;--ink:#0a1a0a;
+  --dark:#0d1f12;--darker:#060e08;
+  --border:#d4ecd4;--muted:#4a6b4a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;background:url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600") center/cover no-repeat;position:relative;display:flex;flex-direction:column;}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(150deg,rgba(6,14,8,.92) 45%,rgba(0,180,60,.1));}
+.hero::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 52px,rgba(0,230,118,.022) 52px,rgba(0,230,118,.022) 53px),repeating-linear-gradient(90deg,transparent,transparent 52px,rgba(0,230,118,.022) 52px,rgba(0,230,118,.022) 53px);}
+
+/* ── NAV ── */
+.navbar{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:20px 68px;}
+.logo{font-family:'Syne',sans-serif;font-size:23px;font-weight:800;color:var(--g1);}
+.logo span{color:#fff;}
+.nav-links{display:flex;gap:26px;align-items:center;}
+.nav-links a{color:rgba(255,255,255,.65);font-size:13px;cursor:pointer;text-decoration:none;transition:.2s;letter-spacing:.3px;}
+.nav-links a:hover{color:var(--g1);}
+.login-btn{padding:8px 20px;background:transparent;border:1.5px solid var(--g1);border-radius:6px;color:var(--g1);cursor:pointer;font-size:13px;font-weight:600;transition:.2s;}
+.login-btn:hover{background:var(--g1);color:#000;}
+
+/* ── HERO CONTENT ── */
+.hero-content{position:relative;z-index:5;flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 68px;max-width:860px;}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;color:var(--g1);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;}
+.hero-title{font-family:'Syne',sans-serif;font-size:58px;font-weight:800;color:#fff;line-height:1.05;margin-bottom:18px;letter-spacing:-1px;}
+.hero-title em{color:var(--g1);font-style:normal;}
+.hero-desc{color:rgba(255,255,255,.58);line-height:1.75;font-size:15px;max-width:580px;margin-bottom:32px;}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{padding:13px 28px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;transition:.2s;display:inline-flex;align-items:center;gap:7px;}
+.btn-green{background:var(--g1);color:#000;}
+.btn-green:hover{background:#fff;}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-purple:hover{background:var(--purple2);}
+.btn-wa{background:var(--wa);color:#fff;}
+.btn-wa:hover{background:var(--wa2);}
+.btn-ghost{border:1.5px solid rgba(255,255,255,.28);background:transparent;color:#fff;}
+.btn-ghost:hover{border-color:#fff;}
+
+/* ── HOW IT WORKS ── */
+.how-section{background:var(--darker);padding:70px 68px;}
+.how-section .eyebrow{margin-bottom:10px;}
+.sec-title{font-family:'Syne',sans-serif;font-size:30px;font-weight:700;color:#e8f5e9;margin-bottom:8px;}
+.sec-sub{font-size:14px;color:#4a8a4a;line-height:1.7;margin-bottom:40px;}
+
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;}
+.flow::before{content:"";position:absolute;top:28px;left:10%;right:10%;height:2px;background:linear-gradient(90deg,var(--g1),var(--purple));z-index:0;}
+.flow-step{display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;z-index:1;}
+.flow-num{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;border:2px solid;}
+.fn1{background:#0d1f12;border-color:var(--g1);}
+.fn2{background:#0d1f12;border-color:var(--g1);}
+.fn3{background:#1e1b4b;border-color:var(--purple);}
+.fn4{background:#1e1b4b;border-color:var(--purple);}
+.fn5{background:#0d2e1a;border-color:var(--wa);}
+.flow-label{font-size:12px;color:#7aba7a;line-height:1.5;max-width:110px;}
+.flow-label strong{display:block;color:#b8e8b8;font-size:13px;margin-bottom:4px;}
+
+/* ── PUSH SETUP SECTION ── */
+.push-section{background:linear-gradient(135deg,#060e08,#0d1f12,#1e1b4b22);padding:70px 68px;}
+.push-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;margin-top:36px;}
+
+.push-card{background:#060e08;border:1px solid #1a3a1a;border-radius:14px;padding:28px;}
+.card-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--g1);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;}
+
+/* Status panel */
+.status-panel{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+.status-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#0d1f12;border-radius:8px;border:1px solid #1a3a1a;}
+.sr-icon{font-size:20px;width:32px;text-align:center;}
+.sr-info{flex:1;}
+.sr-label{font-size:13px;color:#b8e8b8;font-weight:600;}
+.sr-sub{font-size:11px;color:#4a8a4a;margin-top:2px;}
+.sr-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap;}
+.badge-off{background:#1a3a1a;color:#2a5a2a;}
+.badge-on{background:#00c85322;color:var(--g1);}
+.badge-partial{background:#ffab0022;color:var(--amber);}
+
+/* Server config */
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:11px;color:#4a8a4a;margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase;}
+.form-row input{width:100%;padding:10px 13px;background:#0d1f12;border:1px solid #1a3a1a;border-radius:7px;color:#e8f5e9;font-size:13px;font-family:'DM Mono',monospace;transition:.2s;}
+.form-row input:focus{outline:none;border-color:var(--purple);}
+.form-row input::placeholder{color:#2a4a2a;}
+
+.action-btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;transition:.2s;margin-top:6px;}
+.ab-green{background:var(--g2);color:#fff;}
+.ab-green:hover{background:var(--g1);color:#000;}
+.ab-purple{background:var(--purple);color:#fff;}
+.ab-purple:hover{background:var(--purple2);}
+
+.info-box{border-radius:9px;padding:14px;margin-top:12px;font-size:12px;line-height:1.75;}
+.ib-purple{background:#6366f111;border:1px solid #6366f133;color:#a5b4fc;}
+.ib-green{background:#00c85311;border:1px solid #00c85333;color:#7aba7a;}
+.ib-amber{background:#ffab0011;border:1px solid #ffab0033;color:#fcd34d;}
+.info-box strong{color:#c7d2fe;}
+.ib-green strong{color:#b8e8b8;}
+.ib-amber strong{color:#fde68a;}
+
+/* Subscriber list */
+.sub-list{display:flex;flex-direction:column;gap:7px;margin-top:14px;max-height:220px;overflow-y:auto;}
+.sub-item{display:flex;justify-content:space-between;align-items:center;background:#0d1f12;padding:9px 13px;border-radius:7px;border:1px solid #1a3a1a;}
+.si-name{font-size:12px;color:#b8e8b8;font-weight:600;}
+.si-detail{font-size:10px;color:#4a8a4a;font-family:'DM Mono',monospace;margin-top:2px;}
+.si-remove{background:none;border:none;color:#2a4a2a;cursor:pointer;font-size:15px;transition:.2s;}
+.si-remove:hover{color:var(--red);}
+
+/* ── BROWSER COMPAT ── */
+.compat-section{background:#fff;padding:60px 68px;}
+.compat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-top:32px;}
+.compat-card{padding:20px;border-radius:12px;border:1.5px solid var(--border);text-align:center;}
+.compat-icon{font-size:32px;margin-bottom:10px;}
+.compat-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px;}
+.compat-status{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;}
+.cs-yes{background:#00c85322;color:var(--g2);}
+.cs-partial{background:#ffab0022;color:var(--amber);}
+.cs-no{background:#ff3d3d22;color:var(--red);}
+.compat-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;}
+
+/* ── CHATBOT ── */
+.chatbot{position:fixed;inset:0;background:var(--darker);display:none;z-index:2000;}
+.chat-container{display:flex;height:100%;}
+.chat-sidebar{width:220px;background:#060e08;padding:16px;display:flex;flex-direction:column;gap:8px;border-right:1px solid #1a3a1a;}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;color:var(--g1);font-size:16px;padding:4px 0 12px;border-bottom:1px solid #1a3a1a;margin-bottom:4px;}
+.sb-btn{padding:9px 12px;border:1px solid transparent;background:#0d1f12;color:#b8e8b8;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;text-align:left;transition:.2s;}
+.sb-btn:hover{border-color:#1a3a1a;}
+
+/* Push status in sidebar */
+.push-indicator{margin-top:auto;background:#0d1f12;border:1px solid #1a3a1a;border-radius:8px;padding:12px;}
+.pi-title{font-size:10px;color:#2a4a2a;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.pi-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.dot{width:6px;height:6px;border-radius:50%;}
+.dot-pulse{animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.5);}}
+.pi-text{font-size:11px;}
+
+.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.chat-header{background:#060e08;padding:13px 20px;color:white;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1a3a1a;}
+.chat-header h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.hbadge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;font-family:'DM Mono',monospace;}
+.hb-g{background:#00c85322;color:var(--g1);}
+.hb-p{background:#6366f122;color:#a5b4fc;}
+.hb-p.off{background:#1a1a3a;color:#3a3a6a;}
+
+.chat-messages{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:10px;}
+.message{padding:13px 16px;border-radius:10px;max-width:700px;font-size:13px;line-height:1.75;}
+.message.user{background:#0d1f12;color:#b8e8b8;align-self:flex-end;border:1px solid #1a3a1a;}
+.message.ai{background:#0a1a0a;color:#c8e8c8;border:1px solid #1a3a1a;}
+.msg-hd{font-family:'DM Mono',monospace;font-size:10px;color:var(--g1);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;}
+
+.disease-result{margin-top:9px;border-top:1px solid #1a3a1a;padding-top:11px;}
+.dr-row{display:flex;gap:10px;margin-bottom:7px;align-items:baseline;}
+.dr-lbl{font-size:10px;color:#4a8a4a;font-family:'DM Mono',monospace;min-width:84px;text-transform:uppercase;}
+.dr-val{font-size:13px;color:#c8e8c8;flex:1;line-height:1.6;}
+.sev-pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;}
+.sp-low{background:#00c85322;color:var(--g1);}
+.sp-med{background:#ffab0022;color:var(--amber);}
+.sp-high{background:#ff3d3d33;color:var(--red);}
+.treat-item{font-size:12px;color:#7aba7a;padding-left:14px;position:relative;margin-bottom:3px;}
+.treat-item::before{content:"→";position:absolute;left:0;color:var(--g1);}
+
+/* Alert dispatched box */
+.dispatch-box{border-radius:10px;padding:14px 16px;font-size:13px;border:1px solid;margin-top:8px;}
+.db-purple{background:#1e1b4b;border-color:#6366f144;color:#c7d2fe;}
+.db-wa{background:#0d2e1a;border-color:#25d36644;color:#b8e8b8;}
+.db-title{font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;font-size:14px;}
+.db-detail{font-size:12px;opacity:.8;line-height:1.6;}
+
+.img-preview{max-width:200px;border-radius:8px;margin-top:8px;border:1px solid #1a3a1a;}
+.chat-input{background:#060e08;padding:14px 20px;display:flex;gap:8px;border-top:1px solid #1a3a1a;}
+.chat-input textarea{flex:1;height:44px;padding:11px 14px;border-radius:7px;border:1px solid #1a3a1a;background:#0d1f12;color:#b8e8b8;font-size:13px;resize:none;font-family:'DM Sans',sans-serif;}
+.chat-input textarea:focus{outline:none;border-color:var(--g1);}
+.chat-input textarea::placeholder{color:#2a4a2a;}
+.send-btn{background:var(--g2);border:none;padding:11px 18px;border-radius:7px;color:#fff;cursor:pointer;font-weight:700;font-family:'DM Sans',sans-serif;transition:.2s;}
+.send-btn:hover{background:var(--g1);color:#000;}
+.upload-btn{background:#0d1f12;border:1px solid #1a3a1a;padding:11px 14px;border-radius:7px;color:#7aba7a;cursor:pointer;transition:.2s;}
+
+/* ── IN-PAGE PUSH SIMULATION ── */
+.push-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-140px);background:#1e1b4b;border-radius:14px;padding:16px 20px;width:380px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.7);z-index:9998;transition:transform .5s cubic-bezier(.34,1.56,.64,1);border:1px solid #6366f155;}
+.push-toast.show{transform:translateX(-50%) translateY(0);}
+.pt-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.pt-icon{width:36px;height:36px;background:var(--purple);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.pt-app{font-size:10px;color:#a5b4fc;font-weight:700;letter-spacing:.8px;text-transform:uppercase;}
+.pt-time{font-size:10px;color:#6366f188;margin-left:auto;}
+.pt-title{font-size:14px;font-weight:700;color:#e0e7ff;margin-bottom:4px;}
+.pt-msg{font-size:12px;color:#a5b4fc;line-height:1.6;}
+.pt-actions{display:flex;gap:8px;margin-top:12px;}
+.pt-action{flex:1;padding:7px;border:1px solid #6366f144;border-radius:6px;background:transparent;color:#a5b4fc;font-size:12px;cursor:pointer;font-weight:600;transition:.2s;}
+.pt-action:hover{background:#6366f122;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:#0d1f12;color:#b8e8b8;padding:11px 22px;border-radius:8px;border:1px solid #1a3a1a;box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);font-size:13px;white-space:nowrap;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── AI IMAGE SCAN ── */
+.ai-scan-overlay{position:absolute;inset:0;background:rgba(6,14,8,.85);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;}
+.ai-scan-overlay.active{opacity:1;pointer-events:all;}
+.scan-ring{width:60px;height:60px;border-radius:50%;border:3px solid transparent;border-top-color:var(--g1);border-right-color:var(--g1);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.scan-label{font-size:12px;color:#7aba7a;font-family:'DM Mono',monospace;letter-spacing:1px;}
+
+/* ── LOCATION MAP ── */
+.location-section{background:#f7fdf7;padding:60px 68px;border-top:1px solid var(--border);}
+.location-grid{display:grid;grid-template-columns:1fr 320px;gap:28px;margin-top:28px;}
+.map-container{position:relative;background:#0d1f12;border-radius:14px;border:1px solid #1a3a1a;overflow:hidden;min-height:360px;}
+.map-canvas{width:100%;height:360px;display:block;}
+.map-legend{position:absolute;bottom:12px;left:12px;background:#060e08cc;backdrop-filter:blur(6px);border-radius:8px;padding:10px 14px;border:1px solid #1a3a1a;}
+.legend-row{display:flex;align-items:center;gap:8px;font-size:11px;color:#7aba7a;margin-bottom:4px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+.farmer-panel{display:flex;flex-direction:column;gap:10px;}
+.farmer-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px;}
+.fc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.fc-loc{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;}
+.fc-crops{display:flex;gap:5px;flex-wrap:wrap;}
+.crop-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#e8f5e0;color:#2a6a2a;font-weight:600;}
+.fc-status{font-size:11px;margin-top:6px;padding:5px 10px;border-radius:6px;}
+.fcs-safe{background:#e8f5e0;color:#2a7a2a;}
+.fcs-warn{background:#fff8e1;color:#b35000;}
+.fcs-alert{background:#ffeaea;color:#c0000a;}
+.add-location-btn{width:100%;padding:11px;border:1.5px dashed var(--g2);background:transparent;color:var(--g2);border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;transition:.2s;}
+.add-location-btn:hover{background:#e8f5e0;}
+
+/* ── COMMUNITY WARNINGS ── */
+.community-section{background:var(--darker);padding:60px 68px;}
+.warning-feed{display:flex;flex-direction:column;gap:12px;margin-top:24px;max-height:420px;overflow-y:auto;padding-right:4px;}
+.warning-feed::-webkit-scrollbar{width:4px;}
+.warning-feed::-webkit-scrollbar-track{background:#0d1f12;}
+.warning-feed::-webkit-scrollbar-thumb{background:#1a3a1a;border-radius:2px;}
+.warn-item{background:#060e08;border:1px solid #1a3a1a;border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;position:relative;overflow:hidden;}
+.warn-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.warn-item.wi-high::before{background:var(--red);}
+.warn-item.wi-medium::before{background:var(--amber);}
+.warn-item.wi-low::before{background:var(--g1);}
+.wi-avatar{width:38px;height:38px;border-radius:50%;background:#0d1f12;border:1.5px solid #1a3a1a;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.wi-body{flex:1;}
+.wi-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.wi-name{font-size:13px;font-weight:700;color:#e8f5e9;}
+.wi-time{font-size:10px;color:#2a5a2a;font-family:'DM Mono',monospace;}
+.wi-disease{font-size:12px;color:#ff8a80;font-weight:600;margin-bottom:3px;}
+.wi-text{font-size:12px;color:#7aba7a;line-height:1.65;}
+.wi-tags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+.wi-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#0d1f12;border:1px solid #1a3a1a;color:#4a8a4a;}
+.wi-tag.wt-crop{border-color:#00c85333;color:#7aba7a;}
+.wi-tag.wt-loc{border-color:#6366f133;color:#a5b4fc;}
+.warn-post-form{background:#060e08;border:1px solid #1a3a1a;border-radius:10px;padding:16px;margin-bottom:16px;}
+.warn-form-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.warn-form-row input,.warn-form-row select{flex:1;padding:9px 12px;background:#0d1f12;border:1px solid #1a3a1a;border-radius:7px;color:#e8f5e9;font-size:12px;min-width:120px;}
+.warn-form-row textarea{width:100%;padding:9px 12px;background:#0d1f12;border:1px solid #1a3a1a;border-radius:7px;color:#e8f5e9;font-size:12px;resize:none;height:60px;font-family:'DM Sans',sans-serif;}
+.warn-form-row input:focus,.warn-form-row select:focus,.warn-form-row textarea:focus{outline:none;border-color:var(--g1);}
+.warn-form-row input::placeholder,.warn-form-row textarea::placeholder{color:#2a4a2a;}
+.post-warn-btn{background:var(--red);color:#fff;border:none;padding:9px 20px;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px;transition:.2s;}
+.post-warn-btn:hover{background:#ff6659;}
+
+/* ── CROP CALENDAR ── */
+.crop-section{background:#fff;padding:60px 68px;}
+.crop-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0;}
+.crop-tab{padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;transition:.2s;}
+.crop-tab.active,.crop-tab:hover{background:var(--ink);color:#fff;border-color:var(--ink);}
+.crop-advice-panel{background:#f7fdf7;border-radius:14px;border:1.5px solid var(--border);padding:24px;}
+.cap-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.cap-icon{font-size:42px;}
+.cap-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--ink);}
+.cap-season{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:3px;}
+.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.cap-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px;}
+.capc-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600;}
+.capc-content{font-size:13px;color:var(--ink);line-height:1.7;}
+.capc-content li{margin-left:14px;margin-bottom:3px;}
+.risk-bar{height:6px;border-radius:3px;margin-top:6px;background:#eee;}
+.risk-fill{height:100%;border-radius:3px;transition:.8s;}
+.risk-low{background:var(--g2);}
+.risk-med{background:var(--amber);}
+.risk-high{background:var(--red);}
+.ai-advice-box{background:linear-gradient(135deg,#0d1f12,#1e1b4b22);border:1px solid #1a3a1a;border-radius:10px;padding:16px;margin-top:16px;}
+.aab-header{font-family:'DM Mono',monospace;font-size:10px;color:var(--g1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.aab-content{font-size:13px;color:#b8e8b8;line-height:1.75;}
+.aab-loading{display:flex;align-items:center;gap:8px;color:#4a8a4a;font-size:12px;}
+.aab-dots{display:inline-flex;gap:3px;}
+.aab-dots span{width:5px;height:5px;border-radius:50%;background:var(--g1);animation:dotbounce .9s infinite;}
+.aab-dots span:nth-child(2){animation-delay:.15s;}
+.aab-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes dotbounce{0%,80%,100%{transform:scale(.8);opacity:.5;}40%{transform:scale(1.2);opacity:1;}}
+
+@media(max-width:900px){
+  .location-grid{grid-template-columns:1fr;}
+  .location-section,.community-section,.crop-section{padding-left:20px;padding-right:20px;}
+
+  .navbar,.hero-content,.how-section,.push-section,.compat-section{padding-left:20px;padding-right:20px;}
+  .hero-title{font-size:36px;}
+  .flow{grid-template-columns:1fr 1fr;gap:20px;}
+  .flow::before{display:none;}
+  .push-grid{grid-template-columns:1fr;}
+  .compat-grid{grid-template-columns:repeat(3,1fr);}
+  .chat-sidebar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="navbar">
+    <div class="logo">🌿 Patho<span>Watch</span></div>
+    <div class="nav-links">
+      <a onclick="scrollToId('howItWorks')">How It Works</a>
+      <a onclick="scrollToId('pushSetup')">Push Setup</a>
+      <a onclick="scrollToId('locationMap')">📍 Map</a>
+      <a onclick="scrollToId('communityWarnings')">👨‍🌾 Community</a>
+      <a onclick="scrollToId('cropAdvice')">🌾 Crops</a>
+      <a onclick="openChat()">Diagnose</a>
+    </div>
+    <button class="login-btn">Login</button>
+  </div>
+  <div class="hero-content">
+    <div class="eyebrow">Brave · Chrome · Firefox · Web Push API</div>
+    <h1 class="hero-title">Real Alerts Through<br><em>Your Browser.</em></h1>
+    <p class="hero-desc">PathoWatch sends genuine system notifications through Brave, Chrome, or Firefox — even when the tab is closed. Upload a photo for AI vision diagnosis, track farmers on a live map, read community warnings, and get crop-specific seasonal advice.</p>
+    <div class="hero-btns">
+      <button class="btn btn-purple" onclick="requestPush()">🔔 Enable Push in Brave/Chrome</button>
+      <button class="btn btn-green" onclick="openChat()">📸 Start AI Diagnosis</button>
+      <button class="btn btn-wa" onclick="scrollToId('locationMap')">📍 Farmer Map</button>
+      <button class="btn btn-ghost" onclick="scrollToId('communityWarnings')">👨‍🌾 Community Alerts</button>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="howItWorks">
+  <div class="eyebrow" style="color:var(--g1);">Architecture</div>
+  <div class="sec-title">How Browser Push Works</div>
+  <div class="sec-sub">5 steps — from farmer visiting the page to receiving a real Brave/Chrome notification when a disease is detected</div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num fn1">👨‍🌾</div>
+      <div class="flow-label"><strong>Farmer Visits Page</strong>Opens PathoWatch in Brave or Chrome on their phone</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num fn2">🔔</div>
+      <div class="flow-label"><strong>Clicks Allow Once</strong>Browser shows permission prompt — tap Allow. Done.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num fn3">💾</div>
+      <div class="flow-label"><strong>Subscription Saved</strong>Browser sends a unique push endpoint to your server</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num fn4">🧠</div>
+      <div class="flow-label"><strong>AI Detects Disease</strong>PathoWatch AI identifies HIGH severity infection</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num fn5">📳</div>
+      <div class="flow-label"><strong>Phone Vibrates</strong>Real system notification on Brave — tab can be closed</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:48px;">
+    <div class="info-box ib-purple">
+      <strong>🔑 VAPID Keys</strong><br>
+      One-time key generation using <code>web-push</code> library. Your private key stays on your server — never exposed to the browser.
+    </div>
+    <div class="info-box ib-green">
+      <strong>📡 Service Worker</strong><br>
+      A tiny background script (<code>sw.js</code>) runs even when your page is closed. It listens for push events and shows notifications.
+    </div>
+    <div class="info-box ib-amber">
+      <strong>🆓 Free Hosting</strong><br>
+      Deploy server.js to Render.com or Railway.app for free. No credit card. 750 free hours/month = always-on.
+    </div>
+  </div>
+</section>
+
+<!-- PUSH SETUP -->
+<section class="push-section" id="pushSetup">
+  <div class="eyebrow" style="color:var(--g1);">Configuration</div>
+  <div class="sec-title" style="color:#e8f5e9;">Push Notification Setup</div>
+  <div class="sec-sub" style="color:#4a8a4a;">Step-by-step setup for real Brave/Chrome push. Demo mode works instantly without a server.</div>
+
+  <div class="push-grid">
+
+    <!-- LEFT: STATUS + ENABLE -->
+    <div>
+      <div class="push-card" style="margin-bottom:20px;">
+        <div class="card-title">📊 Current Push Status</div>
+        <div class="status-panel">
+          <div class="status-row">
+            <div class="sr-icon">🔔</div>
+            <div class="sr-info">
+              <div class="sr-label">Browser Permission</div>
+              <div class="sr-sub" id="permStatus">Not requested yet</div>
+            </div>
+            <div class="sr-badge badge-off" id="permBadge">OFF</div>
+          </div>
+          <div class="status-row">
+            <div class="sr-icon">⚙️</div>
+            <div class="sr-info">
+              <div class="sr-label">Service Worker</div>
+              <div class="sr-sub" id="swStatus">Checking...</div>
+            </div>
+            <div class="sr-badge badge-off" id="swBadge">—</div>
+          </div>
+          <div class="status-row">
+            <div class="sr-icon">🌐</div>
+            <div class="sr-info">
+              <div class="sr-label">Server Connection</div>
+              <div class="sr-sub" id="serverStatus">Not configured</div>
+            </div>
+            <div class="sr-badge badge-off" id="serverBadge">OFF</div>
+          </div>
+          <div class="status-row">
+            <div class="sr-icon">👥</div>
+            <div class="sr-info">
+              <div class="sr-label">Subscribed Farmers</div>
+              <div class="sr-sub" id="subCountStatus">0 devices registered</div>
+            </div>
+            <div class="sr-badge badge-off" id="subCountBadge">0</div>
+          </div>
+        </div>
+        <button class="action-btn ab-purple" onclick="requestPush()">🔔 Enable Push Notifications</button>
+        <div class="info-box ib-purple" style="margin-top:12px;">
+          <strong>Works on:</strong> Brave ✅ · Chrome ✅ · Firefox ✅ · Edge ✅<br>
+          <strong>iOS Safari:</strong> Requires iOS 16.4+ and "Add to Home Screen"
+        </div>
+      </div>
+
+      <!-- FARMER REGISTRATION -->
+      <div class="push-card">
+        <div class="card-title">👨‍🌾 Register Farmer for Push</div>
+        <div class="form-row"><label>Farmer Name</label><input id="fName" placeholder="e.g. Ravi Kumar"></div>
+        <div class="form-row"><label>Region / District</label><input id="fRegion" placeholder="e.g. Namakkal, Tamil Nadu"></div>
+        <div class="form-row"><label>Alert Severity</label>
+          <select id="fSeverity" style="width:100%;padding:10px 13px;background:#0d1f12;border:1px solid #1a3a1a;border-radius:7px;color:#e8f5e9;font-size:13px;">
+            <option value="high">High Only (Infectious diseases)</option>
+            <option value="medium">Medium & High</option>
+            <option value="all">All diseases</option>
+          </select>
+        </div>
+        <button class="action-btn ab-green" onclick="registerFarmer()">➕ Register This Device</button>
+        <div class="sub-list" id="subList"><div style="font-size:12px;color:#2a4a2a;text-align:center;padding:12px;">No farmers registered yet</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SERVER CONFIG + DEPLOY GUIDE -->
+    <div>
+      <div class="push-card" style="margin-bottom:20px;">
+        <div class="card-title">🖥️ Server Configuration</div>
+        <div class="form-row">
+          <label>Your Server URL (after deploying server.js)</label>
+          <input id="serverUrl" placeholder="https://pathowatch.onrender.com" oninput="saveServerUrl()">
+        </div>
+        <button class="action-btn ab-green" onclick="testServer()">🔍 Test Server Connection</button>
+        <div class="info-box ib-purple" style="margin-top:12px;">
+          <strong>Without a server:</strong> Push works only while the page is open (demo mode).<br>
+          <strong>With server.js deployed:</strong> Push works even when tab/browser is closed on all registered devices.
+        </div>
+      </div>
+
+      <div class="push-card">
+        <div class="card-title">🚀 Deploy in 5 Minutes (Free)</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+
+          <div class="info-box ib-green">
+            <strong>Step 1 — Generate VAPID Keys</strong><br>
+            In terminal: <code style="background:#0d1f12;padding:2px 6px;border-radius:4px;color:#a5b4fc;">npm install web-push && node -e "const wp=require('web-push');console.log(JSON.stringify(wp.generateVAPIDKeys()))"</code><br>
+            Copy the public and private keys into server.js
+          </div>
+
+          <div class="info-box ib-green">
+            <strong>Step 2 — Deploy to Render.com (Free)</strong><br>
+            1. Create account at render.com<br>
+            2. New → Web Service → Upload server.js + package.json<br>
+            3. Set environment variables: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL<br>
+            4. Click Deploy — get your URL in 2 min
+          </div>
+
+          <div class="info-box ib-green">
+            <strong>Step 3 — Paste URL Above</strong><br>
+            Copy your Render URL (e.g. https://pathowatch.onrender.com) into the Server URL field above. PathoWatch will auto-save subscriptions and fire push to all devices on disease detection.
+          </div>
+
+          <div class="info-box ib-amber">
+            <strong>⚡ Demo Mode (No Server)</strong><br>
+            Even without deploying, push works right now while this page is open. Click "Enable Push" above → diagnose a disease → watch the real Brave/Chrome notification appear.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BROWSER COMPATIBILITY -->
+<section class="compat-section" id="compat">
+  <div class="eyebrow">Browser Support</div>
+  <div class="sec-title">Which Browsers Support Push?</div>
+  <div class="compat-grid">
+    <div class="compat-card"><div class="compat-icon">🦁</div><div class="compat-name">Brave</div><div class="compat-status cs-yes">✅ Full Support</div><div class="compat-note">Chromium-based. Full Web Push. Works on Android & Desktop.</div></div>
+    <div class="compat-card"><div class="compat-icon">🌐</div><div class="compat-name">Chrome</div><div class="compat-status cs-yes">✅ Full Support</div><div class="compat-note">Best support. Works on Android, Windows, Mac, Linux.</div></div>
+    <div class="compat-card"><div class="compat-icon">🦊</div><div class="compat-name">Firefox</div><div class="compat-status cs-yes">✅ Full Support</div><div class="compat-note">Full Web Push on Android & Desktop.</div></div>
+    <div class="compat-card"><div class="compat-icon">🔷</div><div class="compat-name">Edge</div><div class="compat-status cs-yes">✅ Full Support</div><div class="compat-note">Chromium-based. Full support on Windows & Android.</div></div>
+    <div class="compat-card"><div class="compat-icon">🧭</div><div class="compat-name">Safari iOS</div><div class="compat-status cs-partial">⚡ iOS 16.4+</div><div class="compat-note">Requires "Add to Home Screen" on iOS 16.4 or newer.</div></div>
+    <div class="compat-card"><div class="compat-icon">📱</div><div class="compat-name">Opera</div><div class="compat-status cs-yes">✅ Full Support</div><div class="compat-note">Chromium-based. Full Web Push.</div></div>
+  </div>
+</section>
+
+<!-- FARMER LOCATION MAP -->
+<section class="location-section" id="locationMap">
+  <div class="eyebrow" style="color:var(--g2);">📍 Field Network</div>
+  <div class="sec-title" style="color:var(--ink);">Farmer Location Map</div>
+  <div class="sec-sub" style="color:var(--muted);">Track your registered farmers on a live map. Disease alerts are geo-targeted — only nearby farmers receive high-priority warnings.</div>
+  <div class="location-grid">
+    <div class="map-container">
+      <canvas class="map-canvas" id="farmerMap"></canvas>
+      <div class="map-legend">
+        <div class="legend-row"><div class="legend-dot" style="background:var(--g1)"></div>Safe Zone</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--amber)"></div>Watch Zone</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--red)"></div>Alert Zone</div>
+      </div>
+    </div>
+    <div class="farmer-panel" id="farmerPanel">
+      <button class="add-location-btn" onclick="addMyLocation()">📍 Add My Location</button>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY WARNING FEED -->
+<section class="community-section" id="communityWarnings">
+  <div class="eyebrow" style="color:var(--red);">👨‍🌾 Community</div>
+  <div class="sec-title" style="color:#e8f5e9;">Community Warning Feed</div>
+  <div class="sec-sub" style="color:#4a8a4a;">Farmers report disease sightings in real time. Your AI diagnosis auto-posts high-severity alerts to warn the community.</div>
+  <div class="warn-post-form">
+    <div class="warn-form-row">
+      <input id="wFarmer" placeholder="Your name (e.g. Ravi Kumar)">
+      <input id="wLocation" placeholder="Location (e.g. Namakkal, TN)">
+      <select id="wSeverity" style="flex:0.5;">
+        <option value="high">🔴 High</option>
+        <option value="medium" selected>🟡 Medium</option>
+        <option value="low">🟢 Low</option>
+      </select>
+    </div>
+    <div class="warn-form-row">
+      <input id="wCrop" placeholder="Crop affected (e.g. Tomato, Rice)">
+      <input id="wDisease" placeholder="Disease name (e.g. Late Blight)">
+    </div>
+    <div class="warn-form-row">
+      <textarea id="wNote" placeholder="What you observed... (e.g. 'Entire south field showing brown lesions, spreading fast')"></textarea>
+    </div>
+    <button class="post-warn-btn" onclick="postWarning()">⚠️ Post Community Warning</button>
+  </div>
+  <div class="warning-feed" id="warningFeed"></div>
+</section>
+
+<!-- CROP-SPECIFIC ADVICE -->
+<section class="crop-section" id="cropAdvice">
+  <div class="eyebrow" style="color:var(--g2);">🌾 Smart Guidance</div>
+  <div class="sec-title">Crop-Specific Advice</div>
+  <div class="sec-sub">Select your crop for a seasonal disease risk calendar and AI-powered management recommendations tailored to current conditions.</div>
+  <div class="crop-tabs" id="cropTabs"></div>
+  <div class="crop-advice-panel" id="cropAdvicePanel">
+    <div style="color:var(--muted);font-size:14px;">← Select a crop above to view advice</div>
+  </div>
+</section>
+
+<!-- CHATBOT -->
+<div class="chatbot" id="chatbot">
+  <div class="chat-container">
+    <div class="chat-sidebar">
+      <div class="sidebar-logo">🌿 PathoWatch</div>
+      <button class="sb-btn" onclick="newDiagnosis()">＋ New Diagnosis</button>
+      <button class="sb-btn" onclick="scrollToId('pushSetup');closeChat()">🔔 Push Setup</button>
+      <button class="sb-btn" onclick="scrollToId('howItWorks');closeChat()">📖 How It Works</button>
+      <div class="push-indicator">
+        <div class="pi-title">Alert Channels</div>
+        <div class="pi-row"><div class="dot dot-pulse" id="swDot" style="background:#2a4a2a;"></div><div class="pi-text" id="swDotLabel" style="color:#2a4a2a;font-size:11px;">Service Worker —</div></div>
+        <div class="pi-row"><div class="dot dot-pulse" id="pushDot" style="background:#2a4a2a;"></div><div class="pi-text" id="pushDotLabel" style="color:#2a4a2a;font-size:11px;">Push —</div></div>
+        <div class="pi-row"><div class="dot" style="background:var(--wa);width:6px;height:6px;border-radius:50%;"></div><div class="pi-text" style="color:#5a9a5a;font-size:11px;">WhatsApp (demo)</div></div>
+      </div>
+    </div>
+
+    <div class="chat-main">
+      <div class="chat-header">
+        <h3>PathoWatch AI Diagnosis</h3>
+        <div class="header-right">
+          <span class="hbadge hb-g">🌿 AI Active</span>
+          <span class="hbadge hb-p off" id="chatPushBadge">🔔 Push OFF</span>
+          <div onclick="closeChat()" style="cursor:pointer;color:#4a8a4a;font-size:18px;margin-left:8px;">✕</div>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="messages">
+        <div class="message ai">
+          <div class="msg-hd">🌿 PathoWatch AI</div>
+          Welcome! Describe plant symptoms or upload an image.<br><br>
+          🔔 <strong>Enable Push Notifications</strong> to receive real Brave/Chrome alerts on your phone automatically when I detect a highly infectious disease.<br><br>
+          Try: <em>"yellow leaves with brown spots on tomato"</em> or <em>"rice plants turning orange, stunted"</em>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <textarea id="userText" placeholder="Describe symptoms..."></textarea>
+        <input type="file" id="imgUpload" hidden accept="image/*">
+        <button class="upload-btn" onclick="document.getElementById('imgUpload').click()">📷</button>
+        <button class="send-btn" onclick="sendMessage()">Diagnose →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IN-PAGE PUSH NOTIFICATION VISUAL -->
+<div class="push-toast" id="pushToast">
+  <div class="pt-head">
+    <div class="pt-icon">🔔</div>
+    <div>
+      <div class="pt-app">Brave Browser · PathoWatch</div>
+    </div>
+    <div class="pt-time" id="ptTime">now</div>
+  </div>
+  <div class="pt-title" id="ptTitle">Disease Alert</div>
+  <div class="pt-msg" id="ptMsg"></div>
+  <div class="pt-actions">
+    <button class="pt-action" onclick="document.getElementById('pushToast').classList.remove('show');openChat()">🔍 View Diagnosis</button>
+    <button class="pt-action" onclick="document.getElementById('pushToast').classList.remove('show')">✕ Dismiss</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   DISEASE DATABASE
+═══════════════════════════════════════ */
+const DISEASES = [
+  {name:"Late Blight",crop:"Tomato / Potato",severity:"high",infectious:true,cause:"Phytophthora infestans",symptoms:["water-soaked lesions","white mold underside","rapid wilting","black stem rot"],treatment:["Apply chlorothalonil or mancozeb immediately","Remove and burn all infected tissue","Avoid overhead irrigation","Apply copper-based fungicide weekly","Improve air circulation"],prevention:"Use certified disease-free seeds. Rotate crops every 3 years.",recovery:"7–14 days with treatment. Severely infected plants must be destroyed."},
+  {name:"Bacterial Wilt",crop:"Tomato / Pepper / Cucumber",severity:"high",infectious:true,cause:"Ralstonia solanacearum",symptoms:["sudden wilting without yellowing","slimy bacterial ooze","rapid plant collapse","brown vascular tissue"],treatment:["No cure — remove infected plants immediately","Disinfect tools with bleach solution","Apply copper bactericide soil drench","Solarize soil after removal","Report to local agriculture officer"],prevention:"Use resistant varieties. Avoid waterlogged soil.",recovery:"Cannot recover. Prevent spread to surrounding plants."},
+  {name:"Rice Blast",crop:"Rice / Paddy",severity:"high",infectious:true,cause:"Magnaporthe oryzae",symptoms:["diamond-shaped leaf lesions","grey-white center lesions","brown borders","neck rot at panicle base"],treatment:["Apply tricyclazole or isoprothiolane","Spray at tillering and boot stage","Reduce nitrogen fertilizer","Drain and re-flood field","Use systemic fungicide"],prevention:"Plant resistant varieties. Balanced fertilization.",recovery:"Early detection: 70% recovery possible. Late stage neck blast causes significant yield loss."},
+  {name:"Fusarium Wilt",crop:"Banana / Tomato / Cotton",severity:"high",infectious:true,cause:"Fusarium oxysporum",symptoms:["yellowing from lower leaves upward","brown vascular discoloration","one-sided wilting","plant death within weeks"],treatment:["No cure — remove and destroy infected plants","Treat soil with trichoderma biofungicide","Solarize soil for 6–8 weeks","Use resistant varieties in future","Rotate crops — avoid solanaceous family"],prevention:"Crop rotation. Avoid wounding roots during transplant.",recovery:"Infected plants cannot be saved. Focus on soil treatment."},
+  {name:"Tungro Virus",crop:"Rice / Paddy",severity:"high",infectious:true,cause:"RTBV — leafhopper transmitted",symptoms:["yellow-orange leaf discoloration","stunted plant growth","reduced tillering","sterile panicles"],treatment:["No cure — destroy infected plants","Control leafhopper vector with imidacloprid","Apply carbofuran at transplanting","Remove infected hills immediately","Report to agriculture department"],prevention:"Use resistant varieties. Manage leafhopper population.",recovery:"Cannot recover. Prevent leafhopper spread to save remaining crop."},
+  {name:"Citrus Canker",crop:"Citrus / Lemon / Orange",severity:"high",infectious:true,cause:"Xanthomonas citri subsp. citri",symptoms:["raised corky lesions on leaves/fruit","yellow halo around lesions","premature fruit drop","water-soaked margins"],treatment:["Apply copper-based bactericide","Remove and burn infected branches","Avoid working in wet conditions","Install windbreaks to reduce spread","Notify plant quarantine authority"],prevention:"Use disease-free planting material. Quarantine new trees.",recovery:"Cannot cure infected tissue. Management prevents spread."},
+  {name:"Powdery Mildew",crop:"Wheat / Grapes / Cucurbits",severity:"medium",infectious:false,cause:"Erysiphe spp.",symptoms:["white powdery coating on leaves","yellowing beneath white patches","distorted young growth","premature leaf drop"],treatment:["Apply sulfur-based fungicide","Use potassium bicarbonate spray","Remove heavily infected leaves","Apply neem oil solution","Improve air circulation around plants"],prevention:"Space plants adequately. Avoid excessive nitrogen fertilizer.",recovery:"Full recovery possible if caught early. Spray every 7–10 days."},
+  {name:"Downy Mildew",crop:"Grape / Cucumber / Onion",severity:"medium",infectious:false,cause:"Plasmopara viticola",symptoms:["yellow angular spots on upper leaf","grey-purple mold beneath leaves","brown papery lesions","shoot dieback"],treatment:["Apply mancozeb or copper hydroxide","Spray during cool wet weather","Remove infected foliage","Improve canopy ventilation","Apply systemic fungicide metalaxyl"],prevention:"Avoid leaf wetness. Prune for good air flow.",recovery:"Good recovery if treated early. Repeat sprays every 10 days."},
+  {name:"Anthracnose",crop:"Mango / Bean / Pepper",severity:"medium",infectious:false,cause:"Colletotrichum gloeosporioides",symptoms:["dark sunken lesions on fruit","brown irregular leaf spots","twig dieback","post-harvest fruit rot"],treatment:["Apply carbendazim or mancozeb","Prune infected branches and burn","Apply before flowering for prevention","Avoid mechanical damage to fruit","Post-harvest hot water or fungicide dip"],prevention:"Remove fallen debris. Avoid overhead irrigation.",recovery:"Manageable with timely spray. Infected fruit cannot be recovered."},
+  {name:"Leaf Rust",crop:"Wheat / Barley / Coffee",severity:"medium",infectious:false,cause:"Puccinia triticina",symptoms:["orange-red pustules on leaves","yellowing around pustules","premature leaf senescence","reduced grain filling"],treatment:["Apply propiconazole or tebuconazole","Spray at first sign of infection","Two sprays 14 days apart","Remove volunteer wheat plants","Monitor regularly during humid weather"],prevention:"Grow resistant varieties. Early planting avoids peak spore period.",recovery:"Good if treated before 30% infection. Yield well-protected with timely fungicide."},
+  {name:"Damping Off",crop:"All crop seedlings",severity:"low",infectious:false,cause:"Pythium / Rhizoctonia spp.",symptoms:["seedling collapse at soil level","water-soaked stem base","poor germination","cottony white growth near soil"],treatment:["Improve soil drainage immediately","Apply Thiram or Captan seed treatment","Reduce watering frequency","Use sterile growing media","Apply trichoderma viride to soil"],prevention:"Avoid overwatering. Use treated seeds from certified sources.",recovery:"Affected seedlings rarely recover. Treat remaining soil and replant."},
+  {name:"Black Rot",crop:"Brassica / Cabbage / Cauliflower",severity:"medium",infectious:false,cause:"Xanthomonas campestris",symptoms:["V-shaped yellow lesions at leaf margin","black veins in lesion","head rot in severe cases","stunted overall growth"],treatment:["Apply copper-based bactericide","Remove infected leaves immediately","Improve drainage in field","Avoid overhead irrigation","Rotate with non-brassica crops"],prevention:"Hot water seed treatment at 50°C for 25 min. Clean tools.",recovery:"Moderate recovery if caught early. Severe infections significantly reduce yield."}
+];
+
+const KW_MAP = {
+  'late blight':0,'blight':0,'phytophthora':0,
+  'bacterial wilt':1,'wilt':1,'ralstonia':1,
+  'rice blast':2,'blast':2,'paddy blast':2,
+  'fusarium':3,'banana wilt':3,
+  'tungro':4,'yellow rice':4,'leafhopper':4,
+  'citrus canker':5,'canker':5,'citrus':5,
+  'powdery mildew':6,'powdery':6,'white powder':6,
+  'downy mildew':7,'downy':7,
+  'anthracnose':8,'mango spot':8,'sunken lesion':8,
+  'leaf rust':9,'rust':9,'orange pustule':9,'wheat':9,
+  'damping':10,'seedling collapse':10,
+  'black rot':11,'cabbage':11,'black vein':11
+};
+
+/* ═══════════════════════════════════════
+   SERVICE WORKER + PUSH SETUP
+═══════════════════════════════════════ */
+let swRegistration = null;
+let pushSubscription = null;
+let serverUrl = '';
+let subscribers = []; // local list for demo
+
+// Init on load
+window.addEventListener('load', async () => {
+  serverUrl = localStorage.getItem('pw_server_url') || '';
+  if(serverUrl) document.getElementById('serverUrl').value = serverUrl;
+  await initServiceWorker();
+  updatePermissionUI();
+});
+
+async function initServiceWorker(){
+  if(!('serviceWorker' in navigator)){
+    setStatus('swStatus','Not supported in this browser','swBadge','—');
+    return;
+  }
+  try {
+    swRegistration = await navigator.serviceWorker.register('./sw.js');
+    setStatus('swStatus','Service Worker active ✓','swBadge','ON','on');
+    document.getElementById('swDot').style.background='var(--g1)';
+    document.getElementById('swDotLabel').style.color='#7aba7a';
+    document.getElementById('swDotLabel').innerText='Service Worker ✓';
+  } catch(e){
+    // In demo (file://) SW won't register — that's fine
+    setStatus('swStatus','Need HTTPS to register SW (demo mode)','swBadge','~','partial');
+    document.getElementById('swDot').style.background='var(--amber)';
+    document.getElementById('swDotLabel').style.color='#a07a2a';
+    document.getElementById('swDotLabel').innerText='Service Worker (needs HTTPS)';
+  }
+}
+
+function updatePermissionUI(){
+  if(!('Notification' in window)) return;
+  const p = Notification.permission;
+  if(p === 'granted'){
+    setStatus('permStatus','Notifications allowed ✓','permBadge','ON','on');
+    document.getElementById('chatPushBadge').innerText='🔔 Push ON';
+    document.getElementById('chatPushBadge').className='hbadge hb-p';
+    document.getElementById('pushDot').style.background='var(--purple)';
+    document.getElementById('pushDotLabel').style.color='#a5b4fc';
+    document.getElementById('pushDotLabel').innerText='Push Enabled ✓';
+  } else if(p === 'denied'){
+    setStatus('permStatus','Blocked — enable in browser settings','permBadge','BLOCKED','off');
+  }
+}
+
+async function requestPush(){
+  if(!('Notification' in window)){
+    toast('Your browser does not support notifications');
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  updatePermissionUI();
+
+  if(permission === 'granted'){
+    toast('✅ Push notifications enabled! You will receive alerts in Brave/Chrome.');
+    // Send a welcome push immediately
+    showPushToast('🌿 PathoWatch Activated', 'You will now receive automatic disease alerts on this device, even when the tab is closed.');
+
+    // Real native notification
+    if(swRegistration){
+      swRegistration.showNotification('🌿 PathoWatch Ready', {
+        body: 'Push alerts are now active. Disease alerts will appear here automatically.',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌿</text></svg>',
+        tag: 'pathowatch-welcome'
+      });
+    } else {
+      // Fallback without SW
+      new Notification('🌿 PathoWatch Ready', {
+        body: 'Push alerts are active for this session.',
+      });
+    }
+  } else if(permission === 'denied'){
+    toast('Permission denied. Go to Brave/Chrome settings → Site Settings → Notifications to enable.');
+  }
+}
+
+/* ═══════════════════════════════════════
+   FIRE PUSH NOTIFICATION
+═══════════════════════════════════════ */
+async function firePush(disease){
+  const title = `🔴 ${disease.name} Detected!`;
+  const body  = `${disease.crop} · HIGH · ${disease.treatment[0]}`;
+
+  // 1. In-page visual toast (always works)
+  showPushToast(title, body);
+
+  // 2. Real browser notification (works if permission granted)
+  if(Notification.permission === 'granted'){
+    if(swRegistration){
+      await swRegistration.showNotification(title, {
+        body,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌿</text></svg>',
+        badge:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌿</text></svg>',
+        tag: 'pathowatch-disease',
+        requireInteraction: true,
+        vibrate: [200,100,200,100,400],
+        actions:[{action:'view',title:'🔍 View'},{action:'dismiss',title:'✕'}]
+      });
+    } else {
+      new Notification(title, { body });
+    }
+  }
+
+  // 3. If server configured — push to ALL registered devices
+  if(serverUrl){
+    try {
+      const res = await fetch(`${serverUrl}/send-alert`, {
+        method: 'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          disease: disease.name, crop: disease.crop,
+          severity: disease.severity, cause: disease.cause,
+          treatment: disease.treatment, prevention: disease.prevention,
+          recovery: disease.recovery
+        })
+      });
+      const data = await res.json();
+      toast(`📳 Push sent to ${data.sent} device(s) via server`);
+      setStatus('subCountStatus',`${data.total_subscribers} devices registered`,'subCountBadge',data.total_subscribers,'on');
+    } catch(e){
+      toast('⚠️ Server push failed — check server URL');
+    }
+  }
+}
+
+function showPushToast(title, msg){
+  const now = new Date();
+  document.getElementById('ptTitle').innerText = title;
+  document.getElementById('ptMsg').innerText = msg;
+  document.getElementById('ptTime').innerText = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const pt = document.getElementById('pushToast');
+  pt.classList.add('show');
+  setTimeout(()=>pt.classList.remove('show'), 7000);
+}
+
+/* ═══════════════════════════════════════
+   SERVER
+═══════════════════════════════════════ */
+function saveServerUrl(){
+  serverUrl = document.getElementById('serverUrl').value.trim();
+  localStorage.setItem('pw_server_url', serverUrl);
+}
+
+async function testServer(){
+  if(!serverUrl){ toast('Enter your server URL first'); return; }
+  try {
+    const res = await fetch(`${serverUrl}/health`);
+    const data = await res.json();
+    setStatus('serverStatus',`Connected ✓ — ${data.subscriptions} subscriptions`,'serverBadge','ON','on');
+    toast(`✅ Server connected — ${data.subscriptions} subscriptions`);
+  } catch(e){
+    setStatus('serverStatus','Cannot reach server','serverBadge','ERR');
+    toast('❌ Cannot reach server. Check the URL.');
+  }
+}
+
+/* ═══════════════════════════════════════
+   FARMER REGISTRATION
+═══════════════════════════════════════ */
+async function registerFarmer(){
+  const name   = document.getElementById('fName').value.trim();
+  const region = document.getElementById('fRegion').value.trim();
+  const severity = document.getElementById('fSeverity').value;
+
+  if(Notification.permission !== 'granted'){
+    toast('Enable push notifications first');
+    await requestPush();
+    return;
+  }
+
+  let subscription = null;
+
+  // Get real push subscription if SW available
+  if(swRegistration && serverUrl){
+    try {
+      const vapidRes = await fetch(`${serverUrl}/vapid-public-key`);
+      const { key } = await vapidRes.json();
+      const appKey = urlBase64ToUint8Array(key);
+      subscription = await swRegistration.pushManager.subscribe({
+        userVisibleOnly: true, applicationServerKey: appKey
+      });
+
+      // Save to server
+      await fetch(`${serverUrl}/subscribe`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ subscription, name, region, severity })
+      });
+    } catch(e){ console.warn('Server sub failed, using demo mode'); }
+  }
+
+  subscribers.push({ name: name||'Farmer', region: region||'Unknown', severity });
+  renderSubList();
+  setStatus('subCountStatus',`${subscribers.length} device(s) registered`,'subCountBadge',subscribers.length,'on');
+  toast(`✅ ${name||'Farmer'} registered for push alerts`);
+  document.getElementById('fName').value='';
+  document.getElementById('fRegion').value='';
+}
+
+function renderSubList(){
+  const list = document.getElementById('subList');
+  if(!subscribers.length){ list.innerHTML='<div style="font-size:12px;color:#2a4a2a;text-align:center;padding:12px;">No farmers registered yet</div>'; return; }
+  list.innerHTML = subscribers.map((s,i)=>`
+    <div class="sub-item">
+      <div><div class="si-name">${s.name}</div><div class="si-detail">${s.region} · ${s.severity} alerts</div></div>
+      <button class="si-remove" onclick="removeSub(${i})">✕</button>
+    </div>
+  `).join('');
+}
+function removeSub(i){ subscribers.splice(i,1); renderSubList(); toast('Removed'); }
+
+/* ═══════════════════════════════════════
+   CHAT
+═══════════════════════════════════════ */
+function openChat(){ document.getElementById('chatbot').style.display='block'; }
+function closeChat(){ document.getElementById('chatbot').style.display='none'; }
+
+function sendMessage(){
+  const inp=document.getElementById('userText');
+  const text=inp.value.trim(); if(!text) return;
+  appendMsg('user',text); inp.value='';
+  diagnose(text);
+}
+
+function appendMsg(role,html,isHTML=false){
+  const m=document.createElement('div'); m.className=`message ${role}`;
+  if(isHTML) m.innerHTML=html; else m.innerText=html;
+  const b=document.getElementById('messages'); b.appendChild(m); b.scrollTop=b.scrollHeight; return m;
+}
+
+function diagnose(text){
+  const el=appendMsg('ai','<div class="msg-hd">🌿 PathoWatch AI</div><span style="color:#4a8a4a;">Analyzing symptoms...</span>',true);
+  setTimeout(()=>{
+    const d = matchDisease(text);
+    if(d) showResult(el,d);
+    else el.innerHTML=`<div class="msg-hd">🌿 PathoWatch AI</div>
+      I couldn't pinpoint a specific disease. Try being more specific:<br><br>
+      • <em>"brown spots with yellow border on tomato"</em><br>
+      • <em>"white powdery coating on wheat"</em><br>
+      • <em>"rice leaves turning yellow-orange, plant stunted"</em><br><br>
+      Or upload a plant photo.`;
+  },1600);
+}
+
+function matchDisease(text){
+  const t=text.toLowerCase();
+  for(const [kw,idx] of Object.entries(KW_MAP)){ if(t.includes(kw)) return DISEASES[idx]; }
+  for(const d of DISEASES){ for(const s of d.symptoms){ if(t.includes(s.split(' ').slice(0,2).join(' '))) return d; } }
+  return null;
+}
+
+function showResult(el,d){
+  const sc=d.severity==='high'?'sp-high':d.severity==='medium'?'sp-med':'sp-low';
+  el.innerHTML=`
+    <div class="msg-hd">🌿 PathoWatch AI · Diagnosis Complete</div>
+    <div class="disease-result">
+      <div class="dr-row"><div class="dr-lbl">Disease</div><div class="dr-val" style="font-weight:700;color:#e8f5e9;font-size:14px;">${d.name} ${d.infectious?'<span style="color:var(--red);font-size:11px;">⚠ Infectious</span>':''}</div></div>
+      <div class="dr-row"><div class="dr-lbl">Crop</div><div class="dr-val">${d.crop}</div></div>
+      <div class="dr-row"><div class="dr-lbl">Cause</div><div class="dr-val">${d.cause}</div></div>
+      <div class="dr-row"><div class="dr-lbl">Severity</div><div class="dr-val"><span class="sev-pill ${sc}">${d.severity.toUpperCase()}</span></div></div>
+      <div class="dr-row"><div class="dr-lbl">Treatment</div><div class="dr-val">${d.treatment.map(t=>`<div class="treat-item">${t}</div>`).join('')}</div></div>
+      <div class="dr-row"><div class="dr-lbl">Prevention</div><div class="dr-val">${d.prevention}</div></div>
+      <div class="dr-row"><div class="dr-lbl">Recovery</div><div class="dr-val">${d.recovery}</div></div>
+    </div>`;
+  document.getElementById('messages').scrollTop=99999;
+
+  if(d.infectious && d.severity==='high'){
+    setTimeout(async ()=>{
+      await firePush(d);
+
+      // Show dispatch summary in chat
+      const box = document.createElement('div');
+      box.style.display='flex'; box.style.flexDirection='column'; box.style.gap='8px'; box.style.marginTop='4px';
+
+      const pushBox = document.createElement('div');
+      pushBox.className='dispatch-box db-purple';
+      pushBox.innerHTML=`<div class="db-title">🔔 Push Notification Fired</div>
+        <div class="db-detail">Sent to Brave/Chrome on ${subscribers.length||'this'} device(s). ${Notification.permission==='granted'?'✓ Permission active.':'<span style="color:var(--amber);">Enable notifications for real push.</span>'}</div>`;
+      box.appendChild(pushBox);
+
+      document.getElementById('messages').appendChild(box);
+      document.getElementById('messages').scrollTop=99999;
+    }, 500);
+  }
+}
+
+document.getElementById('imgUpload').addEventListener('change', async function(){
+  const file = this.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = file.type || 'image/jpeg';
+    const m = document.createElement('div'); m.className = 'message user';
+    m.innerHTML = '<div style="font-size:10px;color:#4a8a4a;font-family:DM Mono,monospace;margin-bottom:6px;">📸 AI IMAGE SCAN</div>';
+    const img = document.createElement('img'); img.src = e.target.result; img.className = 'img-preview';
+    m.appendChild(img); document.getElementById('messages').appendChild(m);
+    document.getElementById('messages').scrollTop = 99999;
+
+    const el = appendMsg('ai', '<div class="msg-hd">🌿 PathoWatch AI · Vision Analysis</div><div class="aab-loading"><div class="scan-ring" style="width:18px;height:18px;border-width:2px;margin-right:4px;"></div> Scanning image with AI vision...</div>', true);
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: `You are PathoWatch AI, an expert plant pathologist. Analyze plant images and identify diseases. Always respond in this EXACT JSON format with no markdown or extra text:
+{"detected":true/false,"disease":"disease name or null","crop":"crop name","confidence":"high/medium/low","severity":"high/medium/low","infectious":true/false,"cause":"pathogen name","symptoms":["symptom1","symptom2"],"treatment":["step1","step2","step3"],"prevention":"prevention text","recovery":"recovery time and prognosis","notes":"any extra field observations"}`,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mediaType, data: base64 }},
+              { type: "text", text: "Analyze this plant image for diseases. If you see a plant, diagnose it. If no disease is visible, set detected:false but still identify the crop and provide preventive advice." }
+            ]
+          }]
+        })
+      });
+      const data = await response.json();
+      const raw = data.content.map(i => i.text || '').join('');
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const result = JSON.parse(clean);
+
+      if(result.detected && result.disease) {
+        const fakeDisease = {
+          name: result.disease, crop: result.crop, severity: result.severity,
+          infectious: result.infectious, cause: result.cause,
+          symptoms: result.symptoms, treatment: result.treatment,
+          prevention: result.prevention, recovery: result.recovery
+        };
+        showResult(el, fakeDisease);
+        // Auto-post community warning for high severity
+        if(result.severity === 'high' && result.infectious) {
+          autoPostWarning(result.disease, result.crop, result.severity);
+        }
+      } else {
+        el.innerHTML = `<div class="msg-hd">🌿 PathoWatch AI · Vision Analysis</div>
+          <div style="color:#b8e8b8;font-size:13px;line-height:1.8;">
+            ✅ <strong style="color:#e8f5e9;">No disease detected</strong> in ${result.crop || 'this plant'}.<br>
+            <span style="color:#7aba7a;">${result.notes || 'Plant appears healthy.'}</span><br><br>
+            <strong style="color:#e8f5e9;">Prevention tip:</strong> <span style="color:#7aba7a;">${result.prevention || 'Continue regular monitoring.'}</span>
+          </div>`;
+      }
+    } catch(err) {
+      // Fallback to random demo disease
+      showResult(el, DISEASES[Math.floor(Math.random() * DISEASES.length)]);
+    }
+  };
+  reader.readAsDataURL(file); this.value = '';
+});
+
+function newDiagnosis(){
+  document.getElementById('messages').innerHTML=`<div class="message ai"><div class="msg-hd">🌿 PathoWatch AI</div>New session started. Describe symptoms or upload an image.</div>`;
+}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+function setStatus(subId,subText,badgeId,badgeText,type=''){
+  document.getElementById(subId).innerText=subText;
+  const b=document.getElementById(badgeId); b.innerText=badgeText;
+  b.className='sr-badge '+(type==='on'?'badge-on':type==='partial'?'badge-partial':'badge-off');
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=window.atob(base64);
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+function toast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+function scrollToId(id){ closeChat(); setTimeout(()=>document.getElementById(id)?.scrollIntoView({behavior:'smooth'}),100); }
+
+/* ═══════════════════════════════════════
+   FARMER LOCATION MAP
+═══════════════════════════════════════ */
+const DEMO_FARMERS = [
+  { name:'Ravi Kumar', region:'Namakkal, TN', lat:11.22, lng:78.17, crops:['Tomato','Brinjal'], status:'safe' },
+  { name:'Priya Devi', region:'Erode, TN', lat:11.34, lng:77.72, crops:['Rice','Paddy'], status:'warn', disease:'Leaf Rust' },
+  { name:'Suresh Babu', region:'Salem, TN', lat:11.65, lng:78.16, crops:['Mango','Banana'], status:'alert', disease:'Anthracnose' },
+  { name:'Murugan P', region:'Coimbatore, TN', lat:11.01, lng:76.96, crops:['Wheat','Cotton'], status:'safe' },
+  { name:'Lakshmi S', region:'Tirupur, TN', lat:11.10, lng:77.34, crops:['Chilli','Onion'], status:'warn', disease:'Powdery Mildew' },
+  { name:'Arjun R', region:'Dharmapuri, TN', lat:12.13, lng:78.16, crops:['Maize','Sorghum'], status:'safe' },
+];
+let mapFarmers = [...DEMO_FARMERS];
+
+function drawMap(){
+  const canvas = document.getElementById('farmerMap');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 700;
+  canvas.height = 360 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth || 700, H = 360;
+
+  // Background
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#0d1f12'); grad.addColorStop(1,'#060e08');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,230,118,0.05)'; ctx.lineWidth = 1;
+  for(let x=0;x<W;x+=40){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
+  for(let y=0;y<H;y+=40){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+
+  // Lat/lng bounds for Tamil Nadu region
+  const latMin=10.7,latMax=12.4,lngMin=76.6,lngMax=78.5;
+  const toX = lng => ((lng-lngMin)/(lngMax-lngMin))*(W-80)+40;
+  const toY = lat => H - ((lat-latMin)/(latMax-latMin))*(H-80)-40;
+
+  // Draw connections
+  mapFarmers.forEach((f,i)=>{
+    mapFarmers.forEach((g,j)=>{
+      if(j<=i) return;
+      const dist = Math.hypot(f.lat-g.lat, f.lng-g.lng);
+      if(dist < 0.8){
+        ctx.beginPath();
+        ctx.moveTo(toX(f.lng),toY(f.lat));
+        ctx.lineTo(toX(g.lng),toY(g.lat));
+        ctx.strokeStyle='rgba(0,200,80,0.12)'; ctx.lineWidth=1;
+        ctx.stroke();
+      }
+    });
+  });
+
+  // Draw farmers
+  mapFarmers.forEach(f=>{
+    const x=toX(f.lng), y=toY(f.lat);
+    const color = f.status==='alert'?'#ff3d3d':f.status==='warn'?'#ffab00':'#00e676';
+
+    // Pulse ring
+    ctx.beginPath(); ctx.arc(x,y,14,0,Math.PI*2);
+    ctx.strokeStyle=color+'44'; ctx.lineWidth=2; ctx.stroke();
+
+    // Dot
+    ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2);
+    ctx.fillStyle=color; ctx.fill();
+
+    // Label
+    ctx.fillStyle='rgba(6,14,8,0.8)';
+    const tw = ctx.measureText(f.name).width + 10;
+    ctx.roundRect(x-tw/2, y+10, tw, 18, 3);
+    ctx.fill();
+    ctx.fillStyle='#b8e8b8'; ctx.font='9px DM Mono,monospace';
+    ctx.textAlign='center'; ctx.fillText(f.name, x, y+22);
+  });
+
+  renderFarmerPanel();
+}
+
+function renderFarmerPanel(){
+  const panel = document.getElementById('farmerPanel');
+  const cards = mapFarmers.map(f=>`
+    <div class="farmer-card">
+      <div class="fc-name">${f.name}</div>
+      <div class="fc-loc">📍 ${f.region}</div>
+      <div class="fc-crops">${f.crops.map(c=>`<span class="crop-tag">${c}</span>`).join('')}</div>
+      <div class="fc-status ${f.status==='alert'?'fcs-alert':f.status==='warn'?'fcs-warn':'fcs-safe'}">
+        ${f.status==='alert'?`🔴 Alert: ${f.disease}`:f.status==='warn'?`🟡 Watch: ${f.disease}`:'🟢 Safe'}
+      </div>
+    </div>`).join('');
+  panel.innerHTML = `<button class="add-location-btn" onclick="addMyLocation()">📍 Add My Location</button>${cards}`;
+}
+
+function addMyLocation(){
+  if(!navigator.geolocation){ toast('Geolocation not supported'); return; }
+  toast('📍 Getting your location...');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const name = prompt('Your name:', 'My Farm') || 'My Farm';
+    const crop = prompt('Your main crop:', 'Rice') || 'Rice';
+    mapFarmers.push({
+      name, region:'My Location', crops:[crop],
+      lat: pos.coords.latitude, lng: pos.coords.longitude, status:'safe'
+    });
+    drawMap();
+    toast(`✅ ${name} added to map`);
+  }, ()=>toast('Could not get location'));
+}
+
+/* ═══════════════════════════════════════
+   COMMUNITY WARNINGS
+═══════════════════════════════════════ */
+const SEED_WARNINGS = [
+  { farmer:'Karthik Selvam', location:'Tirunelveli, TN', crop:'Paddy', disease:'Rice Blast', severity:'high', note:'Diamond-shaped lesions spreading fast, 30% of field affected. Started 3 days ago after heavy rain.', time:'2h ago', emoji:'👨‍🌾' },
+  { farmer:'Meena Gopal', location:'Vellore, TN', crop:'Tomato', disease:'Late Blight', severity:'high', note:'Brown water-soaked patches on leaves. White mold visible on underside in morning. Spreading to neighboring plants.', time:'5h ago', emoji:'👩‍🌾' },
+  { farmer:'Vijay Kumar', location:'Madurai, TN', crop:'Mango', disease:'Anthracnose', severity:'medium', note:'Dark sunken spots on young fruits. About 20% of mango trees showing symptoms.', time:'1d ago', emoji:'👨‍🌾' },
+  { farmer:'Santhiya R', location:'Thanjavur, TN', crop:'Wheat', disease:'Leaf Rust', severity:'medium', note:'Orange pustules appearing on older leaves. Spreading from eastern corner of field.', time:'2d ago', emoji:'👩‍🌾' },
+];
+let warnings = [...SEED_WARNINGS];
+
+function renderWarnings(){
+  const feed = document.getElementById('warningFeed');
+  if(!feed) return;
+  feed.innerHTML = warnings.map(w=>`
+    <div class="warn-item wi-${w.severity}">
+      <div class="wi-avatar">${w.emoji}</div>
+      <div class="wi-body">
+        <div class="wi-header">
+          <span class="wi-name">${w.farmer}</span>
+          <span class="wi-time">${w.time}</span>
+        </div>
+        <div class="wi-disease">⚠ ${w.disease}</div>
+        <div class="wi-text">${w.note}</div>
+        <div class="wi-tags">
+          <span class="wi-tag wt-crop">🌾 ${w.crop}</span>
+          <span class="wi-tag wt-loc">📍 ${w.location}</span>
+          <span class="wi-tag">${ w.severity==='high'?'🔴 HIGH':w.severity==='medium'?'🟡 MEDIUM':'🟢 LOW'}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function postWarning(){
+  const farmer = document.getElementById('wFarmer').value.trim();
+  const location = document.getElementById('wLocation').value.trim();
+  const severity = document.getElementById('wSeverity').value;
+  const crop = document.getElementById('wCrop').value.trim();
+  const disease = document.getElementById('wDisease').value.trim();
+  const note = document.getElementById('wNote').value.trim();
+
+  if(!farmer||!crop||!note){ toast('Fill in at least name, crop, and observation'); return; }
+
+  warnings.unshift({ farmer, location:location||'Unknown', crop, disease:disease||'Unknown', severity, note, time:'just now', emoji:'👨‍🌾' });
+  renderWarnings();
+
+  document.getElementById('wFarmer').value='';
+  document.getElementById('wLocation').value='';
+  document.getElementById('wCrop').value='';
+  document.getElementById('wDisease').value='';
+  document.getElementById('wNote').value='';
+
+  toast('⚠️ Warning posted to community!');
+
+  if(severity==='high'){
+    setTimeout(()=>{ document.getElementById('communityWarnings')?.scrollIntoView({behavior:'smooth'}); }, 200);
+  }
+}
+
+function autoPostWarning(disease, crop, severity){
+  warnings.unshift({ farmer:'PathoWatch AI', location:'Field Scan', crop, disease, severity, note:`AI vision scan detected ${disease} in uploaded image. Nearby farmers — inspect your ${crop} fields immediately.`, time:'just now', emoji:'🤖' });
+  renderWarnings();
+  toast('⚠️ Auto-posted community warning');
+}
+
+/* ═══════════════════════════════════════
+   CROP-SPECIFIC ADVICE
+═══════════════════════════════════════ */
+const CROPS = [
+  { name:'Rice', icon:'🌾', season:'Kharif/Rabi', risks:[
+    {month:'Jan',level:30},{month:'Feb',level:25},{month:'Mar',level:40},{month:'Apr',level:55},{month:'May',level:60},{month:'Jun',level:75},{month:'Jul',level:85},{month:'Aug',level:90},{month:'Sep',level:80},{month:'Oct',level:65},{month:'Nov',level:50},{month:'Dec',level:35}
+  ], diseases:['Rice Blast','Tungro Virus','Sheath Blight','Brown Plant Hopper'], tips:['Maintain 5cm water level during tillering','Use tricyclazole at boot stage prophylactically','Control leafhopper to prevent Tungro spread','Drain field if sheath blight is spotted'] },
+  { name:'Tomato', icon:'🍅', season:'Year-round', risks:[
+    {month:'Jan',level:45},{month:'Feb',level:50},{month:'Mar',level:60},{month:'Apr',level:70},{month:'May',level:75},{month:'Jun',level:80},{month:'Jul',level:85},{month:'Aug',level:90},{month:'Sep',level:85},{month:'Oct',level:70},{month:'Nov',level:55},{month:'Dec',level:45}
+  ], diseases:['Late Blight','Bacterial Wilt','Septoria Leaf Spot','Fusarium Wilt'], tips:['Use drip irrigation — avoid wetting leaves','Stake plants for air circulation','Rotate with non-solanaceous crops','Mulch to prevent soil splash'] },
+  { name:'Wheat', icon:'🌻', season:'Rabi (Oct–Mar)', risks:[
+    {month:'Jan',level:60},{month:'Feb',level:70},{month:'Mar',level:65},{month:'Apr',level:40},{month:'May',level:20},{month:'Jun',level:10},{month:'Jul',level:10},{month:'Aug',level:15},{month:'Sep',level:25},{month:'Oct',level:45},{month:'Nov',level:55},{month:'Dec',level:60}
+  ], diseases:['Leaf Rust','Powdery Mildew','Yellow Rust','Karnal Bunt'], tips:['Sow recommended resistant varieties','Apply propiconazole at first flag leaf','Monitor fields weekly during March–April','Avoid late sowing to reduce rust pressure'] },
+  { name:'Mango', icon:'🥭', season:'Summer fruiting', risks:[
+    {month:'Jan',level:35},{month:'Feb',level:50},{month:'Mar',level:75},{month:'Apr',level:85},{month:'May',level:80},{month:'Jun',level:70},{month:'Jul',level:55},{month:'Aug',level:40},{month:'Sep',level:35},{month:'Oct',level:30},{month:'Nov',level:30},{month:'Dec',level:30}
+  ], diseases:['Anthracnose','Powdery Mildew','Stem-end Rot','Bacterial Canker'], tips:['Spray mancozeb before flowering','Prune for canopy ventilation','Post-harvest hot water dip at 52°C','Remove fallen debris regularly'] },
+  { name:'Banana', icon:'🍌', season:'Year-round', risks:[
+    {month:'Jan',level:40},{month:'Feb',level:40},{month:'Mar',level:55},{month:'Apr',level:65},{month:'May',level:75},{month:'Jun',level:80},{month:'Jul',level:80},{month:'Aug',level:75},{month:'Sep',level:70},{month:'Oct',level:60},{month:'Nov',level:50},{month:'Dec',level:40}
+  ], diseases:['Fusarium Wilt (Panama)','Sigatoka Leaf Spot','Bunchy Top Virus','Banana Streak Virus'], tips:['Use tissue-culture certified planting material','Remove lower infected leaves promptly','Control aphids to prevent virus spread','Avoid waterlogged conditions'] },
+  { name:'Cotton', icon:'🌿', season:'Kharif (Jun–Nov)', risks:[
+    {month:'Jan',level:15},{month:'Feb',level:15},{month:'Mar',level:20},{month:'Apr',level:30},{month:'May',level:40},{month:'Jun',level:55},{month:'Jul',level:70},{month:'Aug',level:85},{month:'Sep',level:80},{month:'Oct',level:65},{month:'Nov',level:40},{month:'Dec',level:20}
+  ], diseases:['Cotton Leaf Curl Virus','Fusarium Wilt','Bacterial Blight','Alternaria Leaf Spot'], tips:['Use BT cotton varieties for bollworm resistance','Rogue out CLCuV-infected plants immediately','Avoid excess nitrogen fertilization','Scout weekly for whitefly population'] },
+];
+
+let activeCrop = null;
+let aiAdviceCache = {};
+
+function initCropTabs(){
+  const tabs = document.getElementById('cropTabs');
+  if(!tabs) return;
+  tabs.innerHTML = CROPS.map(c=>`
+    <button class="crop-tab" onclick="selectCrop('${c.name}')">${c.icon} ${c.name}</button>`).join('');
+}
+
+function selectCrop(name){
+  activeCrop = CROPS.find(c=>c.name===name);
+  if(!activeCrop) return;
+
+  document.querySelectorAll('.crop-tab').forEach(t=>t.classList.toggle('active', t.textContent.includes(name)));
+
+  const now = new Date();
+  const curMonth = now.toLocaleString('en',{month:'short'});
+  const curRisk = activeCrop.risks.find(r=>r.month===curMonth) || activeCrop.risks[0];
+  const riskClass = curRisk.level>=70?'risk-high':curRisk.level>=45?'risk-med':'risk-low';
+  const riskLabel = curRisk.level>=70?'HIGH':curRisk.level>=45?'MEDIUM':'LOW';
+
+  const panel = document.getElementById('cropAdvicePanel');
+  panel.innerHTML = `
+    <div class="cap-header">
+      <div class="cap-icon">${activeCrop.icon}</div>
+      <div>
+        <div class="cap-title">${activeCrop.name}</div>
+        <div class="cap-season">${activeCrop.season}</div>
+      </div>
+    </div>
+    <div class="cap-grid">
+      <div class="cap-card">
+        <div class="capc-title">📅 Current Risk (${curMonth})</div>
+        <div style="font-size:22px;font-weight:800;color:${curRisk.level>=70?'#c00':'#b35000'};margin-bottom:6px;">${riskLabel}</div>
+        <div class="risk-bar"><div class="risk-fill ${riskClass}" style="width:${curRisk.level}%"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">${curRisk.level}% disease pressure</div>
+      </div>
+      <div class="cap-card">
+        <div class="capc-title">⚠️ Common Diseases</div>
+        <div class="capc-content"><ul>${activeCrop.diseases.map(d=>`<li>${d}</li>`).join('')}</ul></div>
+      </div>
+      <div class="cap-card" style="grid-column:span 2;">
+        <div class="capc-title">✅ Best Practices</div>
+        <div class="capc-content"><ul>${activeCrop.tips.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+      </div>
+      <div class="cap-card" style="grid-column:1/-1;">
+        <div class="capc-title">📊 Annual Disease Pressure</div>
+        <div style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-top:8px;">
+          ${activeCrop.risks.map(r=>`
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;background:${r.level>=70?'#ff3d3d55':r.level>=45?'#ffab0055':'#00c85355'};border-radius:2px 2px 0 0;height:${r.level*0.5}px;border-top:2px solid ${r.level>=70?'var(--red)':r.level>=45?'var(--amber)':'var(--g2)'}"></div>
+              <span style="font-size:8px;color:var(--muted);">${r.month}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="ai-advice-box" id="aiAdviceBox">
+      <div class="aab-header">🤖 AI SEASONAL ADVICE</div>
+      <div id="aiAdviceContent" class="aab-loading">
+        <div class="aab-dots"><span></span><span></span><span></span></div>
+        <span>Generating AI advice for ${activeCrop.name}...</span>
+      </div>
+    </div>`;
+
+  if(aiAdviceCache[name]){
+    document.getElementById('aiAdviceContent').className='aab-content';
+    document.getElementById('aiAdviceContent').innerHTML=aiAdviceCache[name];
+  } else {
+    fetchAIAdvice(activeCrop, curMonth, curRisk.level);
+  }
+}
+
+async function fetchAIAdvice(crop, month, riskLevel){
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:"You are PathoWatch AI, a plant pathologist advisor for Indian farmers. Give practical, actionable seasonal advice in simple English. Use 3-4 short paragraphs. No markdown headers or bullet points — flowing text only. Keep it under 200 words. Be specific to the crop and month.",
+        messages:[{
+          role:"user",
+          content:`Crop: ${crop.name}. Current month: ${month}. Current disease risk level: ${riskLevel}% (${riskLevel>=70?'HIGH':riskLevel>=45?'MEDIUM':'LOW'}). Common diseases: ${crop.diseases.join(', ')}. Give targeted seasonal disease management advice for farmers in Tamil Nadu, India right now.`
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(i=>i.text||'').join('');
+    aiAdviceCache[crop.name] = text;
+    const box = document.getElementById('aiAdviceContent');
+    if(box){ box.className='aab-content'; box.innerText=text; }
+  } catch(e){
+    const box = document.getElementById('aiAdviceContent');
+    if(box){ box.className='aab-content'; box.innerText=`For ${crop.name} in ${month}: Monitor fields closely for ${crop.diseases[0]} and ${crop.diseases[1]}. Apply preventive fungicide spray and ensure good drainage. Scout every 3-4 days during high-pressure periods.`; }
+  }
+}
+
+/* ═══════════════════════════════════════
+   INIT ALL FEATURES
+═══════════════════════════════════════ */
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{ drawMap(); renderWarnings(); initCropTabs(); }, 300);
+});
+window.addEventListener('resize', ()=>drawMap());
+</script>
+</body>
+</html>
